@@ -1,0 +1,28 @@
+# Python cache folders
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Local Dagster/Docker data folders
+dagster_home/
+postgres_data/
+
+# IDE folders
+.idea/
+.vscode/
