@@ -26,3 +26,7 @@ postgres_data/
 # IDE folders
 .idea/
 .vscode/
+
+#Secret files
+secrets/
+# *.env

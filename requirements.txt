@@ -2,3 +2,7 @@ dagster
 dagster-webserver
 dagster-postgres
 psycopg2-binary
+pyspark
+influxdb
+pandas
+pyarrow
