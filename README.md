@@ -73,7 +73,11 @@ INFLUXDB_PORT=8086
 INFLUXDB_DATABASE=homeassistant
 INFLUXDB_USERNAME=admin
 INFLUXDB_PASSWORD=password
-# Opcional: si no se define, usa SELECT * FROM /.*/ WHERE time > now() - 1h
+# Opcional: ventana de tiempo para la query por defecto (si INFLUXDB_QUERY esta vacia)
+# Formato: <numero><unidad> ; unidades soportadas: ms, s, m, h, d, w
+# Ejemplos: 1h, 12h, 7d, 30d
+INFLUXDB_LOOKBACK=1d
+# Opcional: query InfluxQL completa (tiene prioridad sobre INFLUXDB_LOOKBACK)
 INFLUXDB_QUERY=
 SPARK_PACKAGES=org.apache.hadoop:hadoop-aws:3.4.2
 
@@ -97,6 +101,7 @@ Notas para R2:
 En `spark_jobs/influx_to_r2.py`:
 
 - Lee datos desde InfluxDB 1.x via `influxdb` (InfluxQL) y los convierte a DataFrame de Spark.
+- Si `INFLUXDB_QUERY` esta vacia, construye la query por defecto usando `INFLUXDB_LOOKBACK` (default: `1d`).
 - Limpia columnas tecnicas cuando existen: `_start`, `_stop`, `result`, `table`.
 - Renombra `_time` a `timestamp`.
 - Agrega `date = to_date(timestamp)` para particion.
@@ -104,9 +109,10 @@ En `spark_jobs/influx_to_r2.py`:
 Escritura final:
 
 - Formato: Parquet
-- Modo: `append`
+- Modo: `overwrite` (dinamico por particion `date`)
 - Destino: `s3a://<R2_BUCKET>/<R2_PREFIX>/`
-- Particion: `partitionBy("date")`
+- Particion: `partitionBy("date")` (estructura esperada: `date=YYYY-MM-DD/`)
+- Limpieza automatica de directorios temporales `.spark-staging-*`
 
 ## Levantar el entorno
 

@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any
 
 import pandas as pd
@@ -44,6 +45,16 @@ def _build_spark_session() -> SparkSession:
     )
 
 
+def _default_influx_query() -> str:
+    lookback = os.getenv("INFLUXDB_LOOKBACK", "30d").strip()
+    if not re.fullmatch(r"\d+(ms|s|m|h|d|w)", lookback):
+        raise ValueError(
+            "Invalid INFLUXDB_LOOKBACK value. Use formats like '1h', '12h', '7d', or '30d'."
+        )
+
+    return f"SELECT * FROM /.*/ WHERE time > now() - {lookback}"
+
+
 def _query_influx_as_pandas() -> pd.DataFrame:
     influx_host = _get_env("INFLUXDB_HOST")
     influx_port = int(_get_env("INFLUXDB_PORT", default="8086"))
@@ -51,8 +62,7 @@ def _query_influx_as_pandas() -> pd.DataFrame:
     influx_username = _get_env("INFLUXDB_USERNAME")
     influx_password = _get_env("INFLUXDB_PASSWORD")
 
-    default_query = 'SELECT * FROM /.*/ WHERE time > now() - 1h'
-    influx_query = os.getenv("INFLUXDB_QUERY", "").strip() or default_query
+    influx_query = os.getenv("INFLUXDB_QUERY", "").strip() or _default_influx_query()
 
     client = DataFrameClient(
         host=influx_host,
@@ -123,6 +133,21 @@ def _target_path() -> str:
     return f"s3a://{bucket}/"
 
 
+def _cleanup_spark_staging_dirs(spark: SparkSession, target_path: str) -> None:
+    hadoop_conf = spark._jsc.hadoopConfiguration()
+    path = spark._jvm.org.apache.hadoop.fs.Path(target_path)
+    fs = path.getFileSystem(hadoop_conf)
+
+    if not fs.exists(path):
+        return
+
+    for status in fs.listStatus(path):
+        item_path = status.getPath()
+        if item_path.getName().startswith(".spark-staging-"):
+            fs.delete(item_path, True)
+            print(f"Deleted Spark staging directory: {item_path.toString()}")
+
+
 def main() -> None:
     spark = None
     try:
@@ -139,12 +164,16 @@ def main() -> None:
             return
 
         target_path = _target_path()
-        print(f"Writing transformed data to {target_path} partitioned by date.")
+        _cleanup_spark_staging_dirs(spark, target_path)
+        print(f"Refreshing transformed data in {target_path} for the loaded date partitions.")
+        spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
         (
-            df_clean.write.mode("append")
+            df_clean.write.mode("overwrite")
+            .option("partitionOverwriteMode", "dynamic")
             .partitionBy("date")
             .parquet(target_path)
         )
+        _cleanup_spark_staging_dirs(spark, target_path)
         print("ETL completed successfully.")
     finally:
         if spark is not None:
