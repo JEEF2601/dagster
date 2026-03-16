@@ -6,3 +6,4 @@ pyspark
 influxdb
 pandas
 pyarrow
+requests
