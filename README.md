@@ -1,19 +1,20 @@
-# Dagster + Spark ETL (InfluxDB -> Cloudflare R2)
+# Dagster + Spark ETL (InfluxDB y CryptoCompare -> Cloudflare R2)
 
-Este proyecto levanta un entorno local de Dagster con PostgreSQL y ejecuta un ETL con PySpark:
+Este proyecto levanta un entorno local de Dagster con PostgreSQL y ejecuta ETLs con PySpark:
 
-`InfluxDB -> Spark transform -> Parquet particionado -> Cloudflare R2`
+- `InfluxDB -> Spark transform -> Parquet particionado -> Cloudflare R2`
+- `CryptoCompare (BTC/USD) -> Spark transform -> Bronze/Silver Parquet -> Cloudflare R2`
 
 Dagster se encarga de la orquestacion (dependencies, retries, schedules) y lanza el script de Spark con `spark-submit`.
 
 ## Arquitectura
 
 ```text
-InfluxDB
+InfluxDB / CryptoCompare API
    |
-   | (InfluxQL query)
+   | (query / HTTP)
    v
-Spark Job (PySpark)
+Spark Jobs (PySpark)
    |
    | transformaciones
    v
@@ -39,6 +40,7 @@ Dagster (orquestador)
 |  `- repository.py
 `- spark_jobs/
    `- influx_to_r2.py
+   `- cryptocompare_to_r2.py
 ```
 
 ## Jobs y schedule
@@ -47,7 +49,9 @@ Archivo: `repo/repository.py`
 
 - `hello_job`: job basico de prueba.
 - `influx_r2_etl_job`: lanza `spark-submit spark_jobs/influx_to_r2.py`.
+- `cryptocompare_r2_etl_job`: lanza `spark-submit spark_jobs/cryptocompare_to_r2.py`.
 - `hourly_influx_r2_schedule`: cron `0 * * * *` (cada hora, UTC).
+- `daily_cryptocompare_r2_schedule`: cron `0 0 * * *` (diario, UTC).
 
 El op de Spark tiene `RetryPolicy(max_retries=3, delay=30)`.
 
@@ -88,6 +92,11 @@ R2_SECRET_ACCESS_KEY=replace_me
 R2_BUCKET=replace_me
 R2_PREFIX=influx/data
 R2_REGION=auto
+
+# CryptoCompare -> R2 (usa el mismo bucket R2_BUCKET)
+# Destinos fijos:
+#   s3a://<R2_BUCKET>/btc-lakehouse-bucket/bronze/
+#   s3a://<R2_BUCKET>/btc-lakehouse-bucket/silver/
 ```
 
 Notas para R2:
@@ -114,6 +123,18 @@ Escritura final:
 - Particion: `partitionBy("date")` (estructura esperada: `date=YYYY-MM-DD/`)
 - Limpieza automatica de directorios temporales `.spark-staging-*`
 
+En `spark_jobs/cryptocompare_to_r2.py`:
+
+- Descarga historico diario BTC/USD desde CryptoCompare (`histoday`, `allData=true`).
+- Define esquema explicito para forzar tipos numericos (`DoubleType`, `LongType`).
+- Construye:
+   - `bronze`: datos crudos + columna `fecha`.
+   - `silver`: `fecha`, `precio_cierre`, `maximo`, `minimo`, `volumen_btc`.
+- Escritura final (ambas capas) en la misma cubeta configurada por `R2_BUCKET`:
+   - `s3a://<R2_BUCKET>/btc-lakehouse-bucket/bronze/`
+   - `s3a://<R2_BUCKET>/btc-lakehouse-bucket/silver/`
+- Modo `overwrite` dinamico por particion `fecha` + limpieza de `.spark-staging-*`.
+
 ## Levantar el entorno
 
 Desde la raiz del proyecto:
@@ -139,6 +160,7 @@ docker compose down
 - `influxdb`
 - `pandas`
 - `pyarrow`
+- `requests`
 
 ## Notas
 

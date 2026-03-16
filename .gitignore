@@ -29,4 +29,9 @@ postgres_data/
 
 #Secret files
 secrets/
+
 # *.env
+
+# Log files
+*.log
+logs/
