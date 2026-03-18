@@ -68,7 +68,7 @@ hourly_influx_r2_schedule = ScheduleDefinition(
 
 daily_cryptocompare_r2_schedule = ScheduleDefinition(
     job=cryptocompare_r2_etl_job,
-    cron_schedule="0 0 * * *",
+    cron_schedule="30 0 * * *",
     execution_timezone="UTC",
 )
 
