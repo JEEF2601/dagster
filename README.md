@@ -105,6 +105,17 @@ Notas para R2:
 - Se usa `s3a` con `path.style.access=true` y SSL habilitado.
 - `SPARK_PACKAGES` debe incluir `org.apache.hadoop:hadoop-aws:3.4.2` para habilitar `S3AFileSystem`.
 
+## Configuracion de instancia Dagster
+
+Este proyecto incluye `dagster.yaml` en la raiz para forzar que Dagster use PostgreSQL como storage de runs/event logs/schedules.
+
+- Evita fallback a SQLite en `DAGSTER_HOME`.
+- Previene errores de migracion como `alembic_version has more than one head`.
+
+`docker-compose.yml` monta este archivo dentro de los servicios de Dagster en:
+
+`/opt/dagster/dagster_home/dagster.yaml`
+
 ## Transformaciones aplicadas
 
 En `spark_jobs/influx_to_r2.py`:
@@ -146,6 +157,19 @@ docker compose up --build
 UI de Dagster:
 
 `http://localhost:3000`
+
+UI de Dagster (solo lectura):
+
+`http://localhost:3001`
+
+## UI admin vs UI viewer (solo lectura)
+
+En `docker-compose.yml` hay dos webservers:
+
+- `dagster-webserver` (admin) en `3000`: permite lanzar runs, materializaciones y cambiar estado de schedules/sensors.
+- `dagster-webserver-readonly` (viewer) en `3001`: inicia con `--read-only` y bloquea mutaciones desde la UI.
+
+Esto cubre el caso de "version alterna" de la UI para observacion. Si necesitas control real por usuario (RBAC), Dagster OSS no trae gestion de usuarios/permisos fina por defecto; normalmente se resuelve con un proxy de autenticacion/autorizacion o con Dagster+.
 
 ## Detener el entorno
 
