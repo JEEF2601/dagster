@@ -11,7 +11,10 @@ services:
 
   dagster-daemon:
     build: .
-    command: dagster-daemon run -m repo.repository
+    command: >
+      sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
+      cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
+      exec dagster-daemon run -m repo.repository"
     environment:
       DAGSTER_POSTGRES_USER: ${DAGSTER_POSTGRES_USER}
       DAGSTER_POSTGRES_PASSWORD: ${DAGSTER_POSTGRES_PASSWORD}
@@ -34,13 +37,15 @@ services:
       R2_REGION: ${R2_REGION}
     volumes:
       - dagster_home:/opt/dagster/dagster_home
-      - ./dagster.yaml:/opt/dagster/dagster_home/dagster.yaml:ro
     depends_on:
       - postgres
 
   dagster-webserver:
     build: .
-    command: dagster-webserver -h 0.0.0.0 -p 3000 -m repo.repository
+    command: >
+      sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
+      cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
+      exec dagster-webserver -h 0.0.0.0 -p 3000 -m repo.repository"
     ports:
       - "3000:3000"
     environment:
@@ -65,13 +70,15 @@ services:
       R2_REGION: ${R2_REGION}
     volumes:
       - dagster_home:/opt/dagster/dagster_home
-      - ./dagster.yaml:/opt/dagster/dagster_home/dagster.yaml:ro
     depends_on:
       - postgres
 
   dagster-webserver-readonly:
     build: .
-    command: dagster-webserver -h 0.0.0.0 -p 3001 -m repo.repository --read-only
+    command: >
+      sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
+      cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
+      exec dagster-webserver -h 0.0.0.0 -p 3001 -m repo.repository --read-only"
     ports:
       - "3001:3001"
     environment:
@@ -96,7 +103,6 @@ services:
       R2_REGION: ${R2_REGION}
     volumes:
       - dagster_home:/opt/dagster/dagster_home
-      - ./dagster.yaml:/opt/dagster/dagster_home/dagster.yaml:ro
     depends_on:
       - postgres
 

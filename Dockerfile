@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY repo ./repo
 COPY spark_jobs ./spark_jobs
+COPY dagster.yaml ./dagster.yaml
 
 # Ensure Dagster has a persistent home path inside the container.
 RUN mkdir -p /opt/dagster/dagster_home
