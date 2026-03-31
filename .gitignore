@@ -18,6 +18,7 @@ dist/
 
 # Notebook checkpoints
 .ipynb_checkpoints/
+notebooks/
 
 # Local Dagster/Docker data folders
 dagster_home/
@@ -35,3 +36,13 @@ secrets/
 # Log files
 *.log
 logs/
+
+# Logs and temporary files
+*.log
+output/
+
+# Deprecated local jobs
+deprecated/
+jobs/
+spark_jobs/
+spark-jobs/
