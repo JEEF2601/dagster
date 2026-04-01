@@ -1,0 +1,19 @@
+jobs:
+
+  influx_to_r2:
+    entrypoint: influx_to_r2.py
+    spark:
+      executor_instances: 2
+      executor_memory: 2g
+      driver_memory: 1g
+      conf: {}
+    params: []
+
+  cryptocompare_to_r2:
+    entrypoint: cryptocompare_to_r2.py
+    spark:
+      executor_instances: 2
+      executor_memory: 2g
+      driver_memory: 1g
+      conf: {}
+    params: []
