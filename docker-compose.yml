@@ -11,6 +11,9 @@ services:
 
   dagster-daemon:
     build: .
+    networks:
+      - default
+      - spark-jobs_default
     command: >
       sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
       cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
@@ -22,6 +25,10 @@ services:
       DAGSTER_POSTGRES_HOST: ${DAGSTER_POSTGRES_HOST}
       DAGSTER_HOME: ${DAGSTER_HOME}
       SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-ssh}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
+      SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
+      SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
+      SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
       SPARK_SSH_HOST: ${SPARK_SSH_HOST}
       SPARK_SSH_USER: ${SPARK_SSH_USER}
       SPARK_SSH_PORT: ${SPARK_SSH_PORT}
@@ -35,6 +42,9 @@ services:
 
   dagster-webserver:
     build: .
+    networks:
+      - default
+      - spark-jobs_default
     command: >
       sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
       cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
@@ -48,6 +58,10 @@ services:
       DAGSTER_POSTGRES_HOST: ${DAGSTER_POSTGRES_HOST}
       DAGSTER_HOME: ${DAGSTER_HOME}
       SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-ssh}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
+      SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
+      SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
+      SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
       SPARK_SSH_HOST: ${SPARK_SSH_HOST}
       SPARK_SSH_USER: ${SPARK_SSH_USER}
       SPARK_SSH_PORT: ${SPARK_SSH_PORT}
@@ -61,6 +75,9 @@ services:
 
   dagster-webserver-readonly:
     build: .
+    networks:
+      - default
+      - spark-jobs_default
     command: >
       sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
       cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
@@ -74,6 +91,10 @@ services:
       DAGSTER_POSTGRES_HOST: ${DAGSTER_POSTGRES_HOST}
       DAGSTER_HOME: ${DAGSTER_HOME}
       SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-ssh}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
+      SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
+      SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
+      SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
       SPARK_SSH_HOST: ${SPARK_SSH_HOST}
       SPARK_SSH_USER: ${SPARK_SSH_USER}
       SPARK_SSH_PORT: ${SPARK_SSH_PORT}
@@ -84,6 +105,10 @@ services:
       - dagster_home:/opt/dagster/dagster_home
     depends_on:
       - postgres
+
+networks:
+  spark-jobs_default:
+    external: true
 
 volumes:
   postgres_data:
