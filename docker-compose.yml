@@ -1,4 +1,4 @@
-services:
+﻿services:
 
   postgres:
     image: postgres:14
@@ -10,10 +10,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   dagster-daemon:
-    build: .
+    build:
+      context: ..
+      dockerfile: dagster/Dockerfile
+      args:
+        ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.0}
     networks:
       - default
-      - spark-jobs_default
+      - etl_shared
     command: >
       sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
       cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
@@ -24,27 +29,36 @@ services:
       DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB}
       DAGSTER_POSTGRES_HOST: ${DAGSTER_POSTGRES_HOST}
       DAGSTER_HOME: ${DAGSTER_HOME}
-      SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-ssh}
+      SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-local}
       SPARK_MASTER_URL: ${SPARK_MASTER_URL}
       SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
       SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
       SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
-      SPARK_SSH_HOST: ${SPARK_SSH_HOST}
-      SPARK_SSH_USER: ${SPARK_SSH_USER}
-      SPARK_SSH_PORT: ${SPARK_SSH_PORT}
-      SPARK_SSH_IDENTITY_FILE: ${SPARK_SSH_IDENTITY_FILE}
-      SPARK_REMOTE_JOBS_ROOT: ${SPARK_REMOTE_JOBS_ROOT}
-      SPARK_JOBS_REPO_ROOT: ${SPARK_JOBS_REPO_ROOT}
+      SPARK_PACKAGES: ${SPARK_PACKAGES:-org.apache.hadoop:hadoop-aws:3.4.1}
+      SPARK_SUBMIT_CONF: ${SPARK_SUBMIT_CONF:-}
+      SPARK_SSH_HOST: ${SPARK_SSH_HOST:-}
+      SPARK_SSH_USER: ${SPARK_SSH_USER:-}
+      SPARK_SSH_PORT: ${SPARK_SSH_PORT:-22}
+      SPARK_SSH_IDENTITY_FILE: ${SPARK_SSH_IDENTITY_FILE:-}
+      SPARK_REMOTE_JOBS_ROOT: ${SPARK_REMOTE_JOBS_ROOT:-/opt/spark-jobs}
+      SPARK_JOBS_REPO_ROOT: ${SPARK_JOBS_REPO_ROOT:-/opt/dagster/app}
     volumes:
       - dagster_home:/opt/dagster/dagster_home
+    env_file:
+      - .env
     depends_on:
       - postgres
 
   dagster-webserver:
-    build: .
+    build:
+      context: ..
+      dockerfile: dagster/Dockerfile
+      args:
+        ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.0}
     networks:
       - default
-      - spark-jobs_default
+      - etl_shared
     command: >
       sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
       cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
@@ -57,27 +71,36 @@ services:
       DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB}
       DAGSTER_POSTGRES_HOST: ${DAGSTER_POSTGRES_HOST}
       DAGSTER_HOME: ${DAGSTER_HOME}
-      SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-ssh}
+      SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-local}
       SPARK_MASTER_URL: ${SPARK_MASTER_URL}
       SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
       SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
       SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
-      SPARK_SSH_HOST: ${SPARK_SSH_HOST}
-      SPARK_SSH_USER: ${SPARK_SSH_USER}
-      SPARK_SSH_PORT: ${SPARK_SSH_PORT}
-      SPARK_SSH_IDENTITY_FILE: ${SPARK_SSH_IDENTITY_FILE}
-      SPARK_REMOTE_JOBS_ROOT: ${SPARK_REMOTE_JOBS_ROOT}
-      SPARK_JOBS_REPO_ROOT: ${SPARK_JOBS_REPO_ROOT}
+      SPARK_PACKAGES: ${SPARK_PACKAGES:-org.apache.hadoop:hadoop-aws:3.4.1}
+      SPARK_SUBMIT_CONF: ${SPARK_SUBMIT_CONF:-}
+      SPARK_SSH_HOST: ${SPARK_SSH_HOST:-}
+      SPARK_SSH_USER: ${SPARK_SSH_USER:-}
+      SPARK_SSH_PORT: ${SPARK_SSH_PORT:-22}
+      SPARK_SSH_IDENTITY_FILE: ${SPARK_SSH_IDENTITY_FILE:-}
+      SPARK_REMOTE_JOBS_ROOT: ${SPARK_REMOTE_JOBS_ROOT:-/opt/spark-jobs}
+      SPARK_JOBS_REPO_ROOT: ${SPARK_JOBS_REPO_ROOT:-/opt/dagster/app}
     volumes:
       - dagster_home:/opt/dagster/dagster_home
+    env_file:
+      - .env
     depends_on:
       - postgres
 
   dagster-webserver-readonly:
-    build: .
+    build:
+      context: ..
+      dockerfile: dagster/Dockerfile
+      args:
+        ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.0}
     networks:
       - default
-      - spark-jobs_default
+      - etl_shared
     command: >
       sh -c "if [ -d /opt/dagster/dagster_home/dagster.yaml ]; then rm -rf /opt/dagster/dagster_home/dagster.yaml; fi;
       cp /opt/dagster/app/dagster.yaml /opt/dagster/dagster_home/dagster.yaml;
@@ -90,25 +113,30 @@ services:
       DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB}
       DAGSTER_POSTGRES_HOST: ${DAGSTER_POSTGRES_HOST}
       DAGSTER_HOME: ${DAGSTER_HOME}
-      SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-ssh}
+      SPARK_RUNNER_MODE: ${SPARK_RUNNER_MODE:-local}
       SPARK_MASTER_URL: ${SPARK_MASTER_URL}
       SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
       SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
       SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
-      SPARK_SSH_HOST: ${SPARK_SSH_HOST}
-      SPARK_SSH_USER: ${SPARK_SSH_USER}
-      SPARK_SSH_PORT: ${SPARK_SSH_PORT}
-      SPARK_SSH_IDENTITY_FILE: ${SPARK_SSH_IDENTITY_FILE}
-      SPARK_REMOTE_JOBS_ROOT: ${SPARK_REMOTE_JOBS_ROOT}
-      SPARK_JOBS_REPO_ROOT: ${SPARK_JOBS_REPO_ROOT}
+      SPARK_PACKAGES: ${SPARK_PACKAGES:-org.apache.hadoop:hadoop-aws:3.4.1}
+      SPARK_SUBMIT_CONF: ${SPARK_SUBMIT_CONF:-}
+      SPARK_SSH_HOST: ${SPARK_SSH_HOST:-}
+      SPARK_SSH_USER: ${SPARK_SSH_USER:-}
+      SPARK_SSH_PORT: ${SPARK_SSH_PORT:-22}
+      SPARK_SSH_IDENTITY_FILE: ${SPARK_SSH_IDENTITY_FILE:-}
+      SPARK_REMOTE_JOBS_ROOT: ${SPARK_REMOTE_JOBS_ROOT:-/opt/spark-jobs}
+      SPARK_JOBS_REPO_ROOT: ${SPARK_JOBS_REPO_ROOT:-/opt/dagster/app}
     volumes:
       - dagster_home:/opt/dagster/dagster_home
+    env_file:
+      - .env
     depends_on:
       - postgres
 
 networks:
-  spark-jobs_default:
+  etl_shared:
     external: true
+    name: etl_shared
 
 volumes:
   postgres_data:

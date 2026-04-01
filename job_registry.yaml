@@ -1,7 +1,18 @@
 jobs:
 
   influx_to_r2:
-    entrypoint: influx_to_r2.py
+    entrypoint: jobs/influx_to_r2.py
+    spark:
+      executor_instances: 2
+      executor_memory: 2g
+      driver_memory: 1g
+      conf: {}
+    params:
+      - date
+      - bucket
+
+  cryptocompare_to_r2:
+    entrypoint: jobs/cryptocompare_to_r2.py
     spark:
       executor_instances: 2
       executor_memory: 2g
@@ -9,11 +20,12 @@ jobs:
       conf: {}
     params: []
 
-  cryptocompare_to_r2:
-    entrypoint: cryptocompare_to_r2.py
+  daily_aggregation:
+    entrypoint: jobs/daily_aggregation.py
     spark:
       executor_instances: 2
       executor_memory: 2g
       driver_memory: 1g
       conf: {}
-    params: []
+    params:
+      - date

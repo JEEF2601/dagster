@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import shlex
 import subprocess
@@ -80,7 +81,7 @@ def _build_spark_submit_parts(job_name: str) -> tuple[list[str], str]:
 
     spark_master_url = os.getenv("SPARK_MASTER_URL", "").strip()
     spark_deploy_mode = os.getenv("SPARK_DEPLOY_MODE", "").strip()
-    spark_packages = os.getenv("SPARK_PACKAGES", "org.apache.hadoop:hadoop-aws:3.4.2").strip()
+    spark_packages = os.getenv("SPARK_PACKAGES", "org.apache.hadoop:hadoop-aws:3.4.1").strip()
     spark_submit_conf = os.getenv("SPARK_SUBMIT_CONF", "").strip()
 
     conf_by_key = _parse_spark_conf(spark_submit_conf) if spark_submit_conf else {}
@@ -137,7 +138,24 @@ def _resolve_local_entrypoint(project_root: Path, entrypoint: str) -> Path:
         if candidate.exists():
             return candidate
 
+    # Fallback: resuelve a traves del paquete etl_jobs instalado.
+    module_name = "etl_jobs." + entrypoint.removesuffix(".py").replace("/", ".")
+    spec = importlib.util.find_spec(module_name)
+    if spec and spec.origin:
+        return Path(spec.origin)
+
     return candidate_paths[0]
+
+
+def _resolve_local_cwd(project_root: Path, entrypoint_path: Path) -> Path:
+    configured_root = os.getenv("SPARK_JOBS_REPO_ROOT", "").strip()
+
+    if configured_root:
+        candidate_root = Path(configured_root)
+        if candidate_root.exists() and entrypoint_path.is_relative_to(candidate_root):
+            return candidate_root
+
+    return project_root
 
 
 def run_spark_job(job_name: str, params: dict[str, Any] | None = None) -> str:
@@ -185,16 +203,24 @@ def run_spark_job(job_name: str, params: dict[str, Any] | None = None) -> str:
         if not local_entrypoint.exists():
             raise FileNotFoundError(f"Job entrypoint not found: {local_entrypoint}")
 
+        local_cwd = _resolve_local_cwd(project_root, local_entrypoint)
+
         result = subprocess.run(
             [*command_prefix, str(local_entrypoint), *job_args],
             capture_output=True,
             text=True,
             check=False,
-            cwd=str(project_root),
+            cwd=str(local_cwd),
         )
 
     if result.returncode != 0:
-        # Propaga stderr para que Dagster registre causa real del fallo.
-        raise RuntimeError(f"Error running job '{job_name}':\n{result.stderr}")
+        # Propaga stderr/stdout para que Dagster registre causa real del fallo.
+        stderr = (result.stderr or "").strip()
+        stdout = (result.stdout or "").strip()
+        if stderr and stdout:
+            details = f"STDERR:\n{stderr}\n\nSTDOUT:\n{stdout}"
+        else:
+            details = stderr if stderr else stdout
+        raise RuntimeError(f"Error running job '{job_name}':\n{details}")
 
     return result.stdout

@@ -3,3 +3,6 @@ dagster-webserver
 dagster-postgres
 psycopg2-binary
 PyYAML
+pyspark==4.0.1
+influxdb
+requests
