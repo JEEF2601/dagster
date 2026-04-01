@@ -30,8 +30,8 @@ postgres_data/
 
 #Secret files
 secrets/
+*.env
 
-# *.env
 
 # Log files
 *.log
