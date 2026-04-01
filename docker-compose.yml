@@ -135,7 +135,6 @@
 
 networks:
   etl_shared:
-    external: true
     name: etl_shared
 
 volumes:
