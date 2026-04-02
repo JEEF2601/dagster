@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
       args:
         ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
-        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.2}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.4}
     networks:
       - default
       - etl_shared
@@ -36,7 +36,8 @@ services:
       SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
       SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
       SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
-      SPARK_PACKAGES: ${SPARK_PACKAGES:-org.apache.hadoop:hadoop-aws:3.4.1}
+      SPARK_JARS: ${SPARK_JARS:-}
+      SPARK_PACKAGES: ${SPARK_PACKAGES:-}
       SPARK_SUBMIT_CONF: ${SPARK_SUBMIT_CONF:-}
       SPARK_SSH_HOST: ${SPARK_SSH_HOST:-}
       SPARK_SSH_USER: ${SPARK_SSH_USER:-}
@@ -57,7 +58,7 @@ services:
       dockerfile: Dockerfile
       args:
         ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
-        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.2}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.4}
     networks:
       - default
       - etl_shared
@@ -78,7 +79,8 @@ services:
       SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
       SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
       SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
-      SPARK_PACKAGES: ${SPARK_PACKAGES:-org.apache.hadoop:hadoop-aws:3.4.1}
+      SPARK_JARS: ${SPARK_JARS:-}
+      SPARK_PACKAGES: ${SPARK_PACKAGES:-}
       SPARK_SUBMIT_CONF: ${SPARK_SUBMIT_CONF:-}
       SPARK_SSH_HOST: ${SPARK_SSH_HOST:-}
       SPARK_SSH_USER: ${SPARK_SSH_USER:-}
@@ -99,7 +101,7 @@ services:
       dockerfile: Dockerfile
       args:
         ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
-        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.2}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.4}
     networks:
       - default
       - etl_shared
@@ -120,7 +122,8 @@ services:
       SPARK_DEPLOY_MODE: ${SPARK_DEPLOY_MODE}
       SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
       SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS:-0.0.0.0}
-      SPARK_PACKAGES: ${SPARK_PACKAGES:-org.apache.hadoop:hadoop-aws:3.4.1}
+      SPARK_JARS: ${SPARK_JARS:-}
+      SPARK_PACKAGES: ${SPARK_PACKAGES:-}
       SPARK_SUBMIT_CONF: ${SPARK_SUBMIT_CONF:-}
       SPARK_SSH_HOST: ${SPARK_SSH_HOST:-}
       SPARK_SSH_USER: ${SPARK_SSH_USER:-}

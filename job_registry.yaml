@@ -3,10 +3,12 @@ jobs:
   influx_to_r2:
     entrypoint: jobs/influx_to_r2.py
     spark:
-      executor_instances: 2
-      executor_memory: 2g
+      executor_instances: 1
+      executor_memory: 1g
       driver_memory: 1g
-      conf: {}
+      conf:
+        spark.executor.cores: "1"
+        spark.cores.max: "1"
     params:
       - date
       - bucket
@@ -14,18 +16,22 @@ jobs:
   cryptocompare_to_r2:
     entrypoint: jobs/cryptocompare_to_r2.py
     spark:
-      executor_instances: 2
-      executor_memory: 2g
+      executor_instances: 1
+      executor_memory: 1g
       driver_memory: 1g
-      conf: {}
+      conf:
+        spark.executor.cores: "1"
+        spark.cores.max: "1"
     params: []
 
   daily_aggregation:
     entrypoint: jobs/daily_aggregation.py
     spark:
-      executor_instances: 2
-      executor_memory: 2g
+      executor_instances: 1
+      executor_memory: 1g
       driver_memory: 1g
-      conf: {}
+      conf:
+        spark.executor.cores: "1"
+        spark.cores.max: "1"
     params:
       - date

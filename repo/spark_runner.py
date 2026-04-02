@@ -81,7 +81,8 @@ def _build_spark_submit_parts(job_name: str) -> tuple[list[str], str]:
 
     spark_master_url = os.getenv("SPARK_MASTER_URL", "").strip()
     spark_deploy_mode = os.getenv("SPARK_DEPLOY_MODE", "").strip()
-    spark_packages = os.getenv("SPARK_PACKAGES", "org.apache.hadoop:hadoop-aws:3.4.1").strip()
+    spark_jars = os.getenv("SPARK_JARS", "").strip()
+    spark_packages = os.getenv("SPARK_PACKAGES", "").strip()
     spark_submit_conf = os.getenv("SPARK_SUBMIT_CONF", "").strip()
 
     conf_by_key = _parse_spark_conf(spark_submit_conf) if spark_submit_conf else {}
@@ -115,7 +116,9 @@ def _build_spark_submit_parts(job_name: str) -> tuple[list[str], str]:
     if spark_deploy_mode:
         command.extend(["--deploy-mode", spark_deploy_mode])
 
-    if spark_packages:
+    if spark_jars:
+        command.extend(["--jars", spark_jars])
+    elif spark_packages:
         command.extend(["--packages", spark_packages])
 
     for key, value in conf_by_key.items():
