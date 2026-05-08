@@ -92,8 +92,12 @@ def _build_spark_submit_parts(job_name: str) -> tuple[list[str], str]:
         raise ValueError(f"Job '{job_name}' has invalid spark definition in job_registry.yaml")
     _apply_job_spark_conf(conf_by_key, spark_conf)
 
-    if spark_deploy_mode.lower() == "client":
+    run_mode = os.getenv("SPARK_RUNNER_MODE", "ssh").strip().lower()
+
+    if spark_deploy_mode.lower() == "client" and run_mode != "docker_ssh":
         # En client mode el driver debe ser alcanzable por executors remotos.
+        # En docker_ssh el driver corre dentro de la red Docker del cluster, por lo
+        # que no necesita anunciar una IP externa.
         driver_host = os.getenv("SPARK_DRIVER_HOST", "").strip()
         driver_bind_address = os.getenv("SPARK_DRIVER_BIND_ADDRESS", "0.0.0.0").strip()
 
@@ -169,7 +173,47 @@ def run_spark_job(job_name: str, params: dict[str, Any] | None = None) -> str:
 
     run_mode = os.getenv("SPARK_RUNNER_MODE", "ssh").strip().lower()
 
-    if run_mode == "ssh":
+    if run_mode == "docker_ssh":
+        # Modo docker_ssh: SSHea al host del cluster Spark y ejecuta spark-submit
+        # via `docker exec` dentro del contenedor indicado.
+        # El driver corre DENTRO de la red Docker del cluster, evitando cualquier
+        # problema de routing entre la VPN y las IPs internas de Docker.
+        ssh_host = os.getenv("SPARK_SSH_HOST", "").strip()
+        ssh_user = os.getenv("SPARK_SSH_USER", "").strip()
+        ssh_port = os.getenv("SPARK_SSH_PORT", "22").strip()
+        ssh_key = os.getenv("SPARK_SSH_IDENTITY_FILE", "").strip()
+        container = os.getenv("SPARK_SSH_DOCKER_CONTAINER", "spark-jobs").strip()
+        remote_jobs_root = os.getenv("SPARK_REMOTE_JOBS_ROOT", "/opt/spark-jobs").rstrip("/")
+
+        if not ssh_host:
+            raise ValueError("SPARK_SSH_HOST is required when SPARK_RUNNER_MODE=docker_ssh")
+
+        destination = f"{ssh_user}@{ssh_host}" if ssh_user else ssh_host
+        remote_entrypoint = f"{remote_jobs_root}/{entrypoint}"
+
+        # Construye el comando spark-submit que correra dentro del contenedor.
+        inner_cmd = " ".join(
+            shlex.quote(part) for part in [*command_prefix, remote_entrypoint, *job_args]
+        )
+        # Envuelve con docker exec para ejecutarlo dentro de la red Docker del cluster.
+        remote_cmd = f"docker exec {shlex.quote(container)} {inner_cmd}"
+
+        ssh_command = ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "BatchMode=yes"]
+        if ssh_key:
+            ssh_command.extend(["-i", ssh_key])
+        if ssh_port:
+            ssh_command.extend(["-p", ssh_port])
+        ssh_command.extend([destination, remote_cmd])
+
+        result = subprocess.run(
+            ssh_command,
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=str(project_root),
+        )
+
+    elif run_mode == "ssh":
         # Modo remoto: construye y ejecuta spark-submit via SSH.
         ssh_host = os.getenv("SPARK_SSH_HOST", "").strip()
         ssh_user = os.getenv("SPARK_SSH_USER", "").strip()
