@@ -12,8 +12,8 @@ def hello() -> None:
 
 
 @op(retry_policy=RetryPolicy(max_retries=3, delay=30))
-def run_influx_cobre_etl() -> None:
-    run_spark_job("influx_cobre")
+def run_spark_etl() -> None:
+    run_spark_job("influx_to_r2")
 
 
 @op(retry_policy=RetryPolicy(max_retries=3, delay=30))
@@ -27,8 +27,8 @@ def hello_job() -> None:
 
 
 @job
-def influx_cobre_etl_job() -> None:
-    run_influx_cobre_etl()
+def influx_r2_etl_job() -> None:
+    run_spark_etl()
 
 
 @job
@@ -36,8 +36,8 @@ def cryptocompare_r2_etl_job() -> None:
     run_cryptocompare_spark_etl()
 
 
-hourly_influx_cobre_schedule = ScheduleDefinition(
-    job=influx_cobre_etl_job,
+hourly_influx_r2_schedule = ScheduleDefinition(
+    job=influx_r2_etl_job,
     cron_schedule="0 * * * *",
     execution_timezone="UTC",
 )
@@ -51,6 +51,6 @@ daily_cryptocompare_r2_schedule = ScheduleDefinition(
 
 
 defs = Definitions(
-    jobs=[hello_job, influx_cobre_etl_job, cryptocompare_r2_etl_job],
-    schedules=[hourly_influx_cobre_schedule, daily_cryptocompare_r2_schedule],
+    jobs=[hello_job, influx_r2_etl_job, cryptocompare_r2_etl_job],
+    schedules=[hourly_influx_r2_schedule, daily_cryptocompare_r2_schedule],
 )
