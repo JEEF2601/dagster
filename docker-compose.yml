@@ -1,4 +1,4 @@
-﻿version: "3.9"
+version: "3.9"
 
 services:
 
@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile
       args:
         ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
-        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.4}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.2.0}
     networks:
       - default
       - etl_shared
@@ -63,7 +63,7 @@ services:
       dockerfile: Dockerfile
       args:
         ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
-        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.4}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.2.0}
     networks:
       - default
       - etl_shared
@@ -107,7 +107,7 @@ services:
       dockerfile: Dockerfile
       args:
         ETL_JOBS_GIT_URL: ${ETL_JOBS_GIT_URL:-https://github.com/JEEF2601/etl-jobs.git}
-        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.1.4}
+        ETL_JOBS_VERSION: ${ETL_JOBS_VERSION:-v0.2.0}
     networks:
       - default
       - etl_shared
