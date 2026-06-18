@@ -73,10 +73,10 @@ daily_cryptocompare_r2_schedule = ScheduleDefinition(
     execution_timezone="UTC",
 )
 
-# Cada lunes a las 02:00 UTC procesa la semana anterior completa (sin config = defaults)
+# Cada lunes a las 02:15 UTC procesa la semana anterior completa (sin config = defaults)
 weekly_silver_influx_electricity_schedule = ScheduleDefinition(
     job=silver_influx_electricity_etl_job,
-    cron_schedule="0 2 * * 1",
+    cron_schedule="15 2 * * 1",
     execution_timezone="UTC",
 )
 
