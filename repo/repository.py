@@ -60,6 +60,16 @@ def silver_influx_electricity_etl_job() -> None:
     run_silver_influx_electricity_etl()
 
 
+@op(retry_policy=RetryPolicy(max_retries=3, delay=30))
+def run_silver_electricity_to_postgres_etl() -> None:
+    run_spark_job("silver_electricity_to_postgres")
+
+
+@job
+def silver_electricity_to_postgres_etl_job() -> None:
+    run_silver_electricity_to_postgres_etl()
+
+
 hourly_influx_cobre_schedule = ScheduleDefinition(
     job=influx_cobre_etl_job,
     cron_schedule="0 * * * *",
@@ -82,6 +92,12 @@ weekly_silver_influx_electricity_schedule = ScheduleDefinition(
 
 
 defs = Definitions(
-    jobs=[hello_job, influx_cobre_etl_job, cryptocompare_r2_etl_job, silver_influx_electricity_etl_job],
+    jobs=[
+        hello_job,
+        influx_cobre_etl_job,
+        cryptocompare_r2_etl_job,
+        silver_influx_electricity_etl_job,
+        silver_electricity_to_postgres_etl_job,
+    ],
     schedules=[hourly_influx_cobre_schedule, daily_cryptocompare_r2_schedule, weekly_silver_influx_electricity_schedule],
 )
