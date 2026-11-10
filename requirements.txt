@@ -7,4 +7,4 @@ influxdb
 pandas
 pyarrow
 requests
-git+https://github.com/JEEF2601/etl-jobs.git@v0.2.0
+git+https://github.com/JEEF2601/etl-jobs.git@v0.2.10
