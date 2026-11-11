@@ -25,9 +25,12 @@ def _build_spark_session() -> SparkSession:
     region = os.getenv("R2_REGION", "auto")
     app_name = os.getenv("SPARK_APP_NAME", "influx_to_r2_etl")
     spark_packages = os.getenv("SPARK_PACKAGES", "").strip()
+    remote_url = os.getenv("SPARK_REMOTE") or os.getenv("SPARK_REMOTE_URL")
 
     builder = SparkSession.builder.appName(app_name)
-    if spark_packages:
+    if remote_url:
+        builder = builder.remote(remote_url)
+    if spark_packages and not remote_url:
         builder = builder.config("spark.jars.packages", spark_packages)
 
     return (

@@ -9,17 +9,13 @@ import runpy
 @op
 def run_spark_etl_remote(script_name: str) -> None:
     remote_url = os.getenv("SPARK_REMOTE_URL", "sc://spark-master:15002")
-    
-    # Initialize SparkSession with Remote (Spark Connect)
-    spark = SparkSession.builder.remote(remote_url).getOrCreate()
+    os.environ["SPARK_REMOTE"] = remote_url
     
     project_root = Path(__file__).resolve().parents[1]
     spark_script = project_root / "spark_jobs" / script_name
     
     # Execute the script in the context of the Spark Connect session
     runpy.run_path(str(spark_script), run_name="__main__")
-    
-    spark.stop()
 
 @op(retry_policy=RetryPolicy(max_retries=3, delay=30))
 def run_spark_etl() -> None:
