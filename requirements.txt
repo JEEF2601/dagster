@@ -8,3 +8,4 @@ pandas
 pyarrow
 requests
 git+https://github.com/JEEF2601/etl-jobs.git@v0.2.10
+pyspark[connect]==4.0.1
